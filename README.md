@@ -3,7 +3,25 @@
 A modern, free, and unlimited Iranian Persian streaming platform.
 
 <p align="center">
-  <img src="assets/logo.png" alt="CCloud Logo" width="120">
+  <img src="assets/logo.png" alt="CCloud Logo" width="150">
+</p>
+
+<p align="center">
+  <a href="https://github.com/code3-dev/CCloud-GUI/stargazers">
+    <img src="https://img.shields.io/github/stars/code3-dev/CCloud-GUI?style=social" alt="GitHub Stars">
+  </a>
+  <a href="https://github.com/code3-dev/CCloud-GUI/forks">
+    <img src="https://img.shields.io/github/forks/code3-dev/CCloud-GUI?style=social" alt="GitHub Forks">
+  </a>
+  <a href="https://github.com/code3-dev/CCloud-GUI/releases">
+    <img src="https://img.shields.io/github/downloads/code3-dev/CCloud-GUI/total?style=social" alt="GitHub Downloads">
+  </a>
+  <a href="https://github.com/code3-dev/CCloud-GUI/issues">
+    <img src="https://img.shields.io/github/issues/code3-dev/CCloud-GUI" alt="GitHub Issues">
+  </a>
+  <a href="https://github.com/code3-dev/CCloud-GUI/pulls">
+    <img src="https://img.shields.io/github/issues-pr/code3-dev/CCloud-GUI" alt="GitHub Pull Requests">
+  </a>
 </p>
 
 ## Description

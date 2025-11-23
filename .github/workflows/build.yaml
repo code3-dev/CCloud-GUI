@@ -260,7 +260,7 @@ jobs:
           cp linux/assets/256x256.png ccloud.AppDir/ccloud.png
           
           # Make sure the executable is properly linked
-          chmod +x ccloud.AppDir/usr/bin/ccloud
+          chmod +x ccloud.AppDir/usr/bin/ccloud_gui
           
           # List files for debugging
           echo "AppDir contents:"
