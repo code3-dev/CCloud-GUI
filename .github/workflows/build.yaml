@@ -251,16 +251,9 @@ jobs:
           mkdir -p ccloud.AppDir/usr/bin
           cp -r build/linux/x64/release/bundle/* ccloud.AppDir/usr/bin/
           
-          # Create desktop file directly in AppDir
-          echo "Creating desktop file..."
-          cat > ccloud.AppDir/ccloud.desktop << EOF
-          [Desktop Entry]
-          Name=CCloud
-          Exec=ccloud
-          Icon=ccloud
-          Type=Application
-          Categories=Utility;
-          EOF
+          # Copy desktop file to AppDir
+          echo "Copying desktop file..."
+          cp linux/runner/ccloud.desktop ccloud.AppDir/ccloud.desktop
           
           # Copy icon to AppDir root with correct name
           echo "Copying icon..."

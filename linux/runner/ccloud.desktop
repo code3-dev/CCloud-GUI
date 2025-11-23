@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=CCloud
+Comment=Modern, free, and unlimited Iranian Persian streaming application
+Exec=ccloud
+Icon=ccloud
+Terminal=false
+Type=Application
+Categories=Utility;
