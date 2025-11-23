@@ -17,7 +17,7 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  List<MediaItem> _favorites = [];
+  List<MediaItemWithTimestamp> _favorites = [];
   bool _isLoading = true;
 
   @override
@@ -26,18 +26,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     _loadFavorites();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _loadFavorites();
-  }
-
   Future<void> _loadFavorites() async {
     setState(() {
       _isLoading = true;
     });
     try {
-      final favorites = await StorageUtils.loadFavorites();
+      final favorites = await StorageUtils.loadFavoritesWithTimestamp();
       setState(() {
         _favorites = favorites;
         _isLoading = false;
@@ -108,7 +102,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Future<void> _exportFavorites() async {
     try {
       // Get favorites data
-      final favorites = await StorageUtils.loadFavorites();
+      final favorites = await StorageUtils.loadFavoritesWithTimestamp();
 
       // Convert to JSON
       final jsonData = favorites.map((item) => item.toJson()).toList();
@@ -319,7 +313,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   : LayoutBuilder(
                       builder: (context, constraints) {
                         // Calculate cross axis count based on available width
-                        final cardWidth = 200.0;
+                        final cardWidth = 200.0; // Increased card width
                         final spacing = 20.0;
                         final crossAxisCount =
                             ((constraints.maxWidth + spacing) /
@@ -327,22 +321,25 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                 .floor()
                                 .toInt();
 
+                        // Ensure at least 1 column and max 5 columns
                         final count = crossAxisCount.clamp(1, 5);
 
                         return GridView.builder(
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: count,
-                                childAspectRatio: 0.68,
-                                crossAxisSpacing: 20,
-                                mainAxisSpacing: 20,
-                              ),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount:
+                                count, // Use dynamic count instead of fixed 5
+                            childAspectRatio:
+                                0.68, // Adjusted for the new card dimensions
+                            crossAxisSpacing: 20,
+                            mainAxisSpacing: 20,
+                          ),
                           itemCount: _favorites.length,
                           itemBuilder: (context, index) {
-                            final mediaItem = _favorites[index];
+                            final mediaItem = _favorites[index].mediaItem;
                             return MediaCard(
                               mediaItem: mediaItem,
-                              showFavoriteButton: false,
+                              showFavoriteButton:
+                                  false, // Don't show favorite button in favorites screen
                               onTap: () async {
                                 // Navigate to the appropriate screen based on media type
                                 if (mediaItem.type == 'movie') {

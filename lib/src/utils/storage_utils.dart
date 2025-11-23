@@ -3,6 +3,29 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../models/media_item.dart';
 
+// Wrapper class to add timestamp to MediaItem for favorites
+class MediaItemWithTimestamp {
+  final MediaItem mediaItem;
+  final int timestamp;
+  
+  MediaItemWithTimestamp(this.mediaItem, this.timestamp);
+  
+  Map<String, dynamic> toJson() {
+    final json = mediaItem.toJson();
+    json['timestamp'] = timestamp;
+    return json;
+  }
+  
+  static MediaItemWithTimestamp fromJson(Map<String, dynamic> json) {
+    final timestamp = json['timestamp'] as int? ?? DateTime.now().millisecondsSinceEpoch;
+    // Remove timestamp before creating MediaItem
+    final jsonWithoutTimestamp = Map<String, dynamic>.from(json);
+    jsonWithoutTimestamp.remove('timestamp');
+    final mediaItem = MediaItem.fromJson(jsonWithoutTimestamp);
+    return MediaItemWithTimestamp(mediaItem, timestamp);
+  }
+}
+
 class StorageUtils {
   static Future<String> get _localPath async {
     final directory = await getApplicationDocumentsDirectory();
@@ -114,16 +137,23 @@ class StorageUtils {
     }
   }
 
-  // Add a media item to favorites
+  // Add a media item to favorites with timestamp
   static Future<void> addToFavorites(MediaItem mediaItem) async {
     try {
-      final favorites = await loadFavorites();
+      final favorites = await loadFavoritesWithTimestamp();
       // Check if item already exists
-      final existingIndex = favorites.indexWhere((item) => item.id == mediaItem.id && item.type == mediaItem.type);
-      if (existingIndex == -1) {
-        favorites.add(mediaItem);
+      final existingIndex = favorites.indexWhere((item) => item.mediaItem.id == mediaItem.id && item.mediaItem.type == mediaItem.type);
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      
+      if (existingIndex != -1) {
+        // Update existing item's timestamp
+        favorites.removeAt(existingIndex);
+        favorites.insert(0, MediaItemWithTimestamp(mediaItem, timestamp));
+      } else {
+        // Add new item at the beginning (newest first)
+        favorites.insert(0, MediaItemWithTimestamp(mediaItem, timestamp));
       }
-      await _saveFavorites(favorites);
+      await _saveFavoritesWithTimestamp(favorites);
     } catch (e) {
       print('Error adding to favorites: $e');
     }
@@ -132,28 +162,44 @@ class StorageUtils {
   // Remove a media item from favorites
   static Future<void> removeFromFavorites(int id, String type) async {
     try {
-      final favorites = await loadFavorites();
-      favorites.removeWhere((item) => item.id == id && item.type == type);
-      await _saveFavorites(favorites);
+      final favorites = await loadFavoritesWithTimestamp();
+      favorites.removeWhere((item) => item.mediaItem.id == id && item.mediaItem.type == type);
+      await _saveFavoritesWithTimestamp(favorites);
     } catch (e) {
       print('Error removing from favorites: $e');
     }
   }
 
-  // Load all favorites
-  static Future<List<MediaItem>> loadFavorites() async {
+  // Load all favorites with timestamps
+  static Future<List<MediaItemWithTimestamp>> loadFavoritesWithTimestamp() async {
     try {
       final file = await _localFavoritesFile;
       if (await file.exists()) {
         final jsonString = await file.readAsString();
         final jsonArray = jsonDecode(jsonString) as List<dynamic>;
-        return jsonArray.map((item) => MediaItem.fromJson(item as Map<String, dynamic>)).toList();
+        final favorites = <MediaItemWithTimestamp>[];
+        
+        for (final item in jsonArray) {
+          final jsonMap = item as Map<String, dynamic>;
+          final favoriteItem = MediaItemWithTimestamp.fromJson(jsonMap);
+          favorites.add(favoriteItem);
+        }
+        
+        // Sort by timestamp descending (newest first)
+        favorites.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        return favorites;
       }
       return [];
     } catch (e) {
       print('Error loading favorites: $e');
       return [];
     }
+  }
+
+  // Load all favorites (backward compatibility)
+  static Future<List<MediaItem>> loadFavorites() async {
+    final favoritesWithTimestamp = await loadFavoritesWithTimestamp();
+    return favoritesWithTimestamp.map((item) => item.mediaItem).toList();
   }
 
   // Clear all favorites
@@ -168,11 +214,12 @@ class StorageUtils {
     }
   }
 
-  // Save favorites to file
-  static Future<void> _saveFavorites(List<MediaItem> favorites) async {
+  // Save favorites to file with timestamps
+  static Future<void> _saveFavoritesWithTimestamp(List<MediaItemWithTimestamp> favorites) async {
     try {
       final file = await _localFavoritesFile;
-      final jsonString = jsonEncode(favorites.map((item) => item.toJson()).toList());
+      final jsonArray = favorites.map((item) => item.toJson()).toList();
+      final jsonString = jsonEncode(jsonArray);
       await file.writeAsString(jsonString);
     } catch (e) {
       print('Error saving favorites: $e');
