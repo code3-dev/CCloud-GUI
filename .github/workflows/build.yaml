@@ -1,0 +1,353 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to create release for (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        architecture: [x64]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build Windows (${{ matrix.architecture }})
+        run: flutter build windows --release
+
+      - name: Install Inno Setup
+        run: |
+          choco install innosetup -y
+        shell: cmd
+
+      - name: Create Windows installer
+        run: |
+          cd windows\installer
+          ISCC.exe CCloud.iss
+        shell: cmd
+
+      - name: Package Windows build
+        run: |
+          mkdir -p release
+          copy windows\installer\CCloud-setup.exe release\
+        shell: cmd
+
+      - name: Create Windows ZIP (Installer)
+        run: |
+          cd release
+          7z a -tzip CCloud-windows-${{ matrix.architecture }}-installer.zip CCloud-setup.exe
+        shell: cmd
+
+      - name: Create Windows Portable ZIP
+        run: |
+          mkdir -p release\portable
+          xcopy build\windows\${{ matrix.architecture }}\runner\Release\* release\portable\ /E /I
+          cd release
+          7z a -tzip CCloud-windows-${{ matrix.architecture }}-portable.zip portable\
+        shell: cmd
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build-${{ matrix.architecture }}
+          path: |
+            release/CCloud-setup.exe
+            release/CCloud-windows-${{ matrix.architecture }}-installer.zip
+            release/CCloud-windows-${{ matrix.architecture }}-portable.zip
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Enable macOS desktop support
+        run: flutter config --enable-macos-desktop
+
+      - name: Build macOS
+        run: flutter build macos --release --no-tree-shake-icons
+
+      - name: Create Universal Binary
+        run: |
+          # Create a universal binary that works on both Intel and Apple Silicon
+          mkdir -p release
+          
+          # The built app is already a universal binary by default
+          # Copy the app bundle to a temporary location
+          TEMP_DIR=$(mktemp -d)
+          cp -R build/macos/Build/Products/Release/ccloud_gui.app "$TEMP_DIR/"
+          
+          # Create the DMG using create-dmg tool
+          brew install create-dmg
+          
+          create-dmg \
+            --volname "CCloud Installer" \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon-size 100 \
+            --app-drop-link 600 185 \
+            "release/CCloud-macos-universal.dmg" \
+            "$TEMP_DIR/"
+          
+          # Clean up
+          rm -rf "$TEMP_DIR"
+
+      - name: Create ZIP
+        run: |
+          # Create a ZIP archive of the app bundle
+          mkdir -p release
+          zip -r release/CCloud-macos-universal.zip build/macos/Build/Products/Release/ccloud_gui.app
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build
+          path: |
+            release/CCloud-macos-universal.dmg
+            release/CCloud-macos-universal.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+        shell: bash
+
+      - name: Build Linux
+        run: flutter build linux --release
+
+      - name: Install packaging tools
+        run: |
+          sudo apt-get install -y rpm ruby ruby-dev rubygems build-essential
+          sudo gem install fpm
+        shell: bash
+
+      - name: Create DEB and RPM packages
+        run: |
+          # Create directory structure for packaging
+          mkdir -p ccloud-package/usr/bin
+          mkdir -p ccloud-package/usr/lib
+          mkdir -p ccloud-package/usr/share/applications
+          mkdir -p ccloud-package/usr/share/icons/hicolor/16x16/apps
+          mkdir -p ccloud-package/usr/share/icons/hicolor/22x22/apps
+          mkdir -p ccloud-package/usr/share/icons/hicolor/24x24/apps
+          mkdir -p ccloud-package/usr/share/icons/hicolor/32x32/apps
+          mkdir -p ccloud-package/usr/share/icons/hicolor/48x48/apps
+          mkdir -p ccloud-package/usr/share/icons/hicolor/64x64/apps
+          mkdir -p ccloud-package/usr/share/icons/hicolor/128x128/apps
+          mkdir -p ccloud-package/usr/share/icons/hicolor/256x256/apps
+          mkdir -p ccloud-package/usr/share/icons/hicolor/512x512/apps
+          
+          # Copy application files
+          cp -r build/linux/x64/release/bundle/* ccloud-package/usr/bin/
+          
+          # Ensure release directory exists
+          mkdir -p release
+          
+          # Get version from pubspec.yaml
+          VERSION=$(grep '^version:' pubspec.yaml | cut -d ':' -f 2 | tr -d ' ')
+          
+          # Create DEB package
+          fpm -s dir -t deb \
+            -n ccloud \
+            -v $VERSION \
+            --description "CCloud Application" \
+            --url "https://github.com/code3-dev/CCloud-GUI" \
+            --maintainer "Hossein Pira" \
+            --vendor "CCloud" \
+            --license "MIT" \
+            --category "Utility" \
+            --depends "libgtk-3-0" \
+            --depends "liblzma5" \
+            -C ccloud-package \
+            --package release/ccloud.deb \
+            .
+          
+          # Create RPM package
+          fpm -s dir -t rpm \
+            -n ccloud \
+            -v $VERSION \
+            --description "CCloud" \
+            --url "https://github.com/code3-dev/CCloud-GUI" \
+            --maintainer "Hossein Pira" \
+            --vendor "CCloud" \
+            --license "MIT" \
+            --category "Applications/Utilities" \
+            --depends "gtk3" \
+            --depends "xz-libs" \
+            -C ccloud-package \
+            --package release/ccloud.rpm \
+            .
+        shell: bash
+
+      - name: Create Linux AppImage (Optional)
+        run: |
+          # Ensure release directory exists
+          mkdir -p release
+          
+          # Get version from pubspec.yaml
+          VERSION=$(grep '^version:' pubspec.yaml | cut -d ':' -f 2 | tr -d ' ')
+          echo "Building AppImage for version: $VERSION"
+          
+          # Download linuxdeploy tool
+          echo "Downloading linuxdeploy..."
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage
+          
+          # Create AppDir structure
+          echo "Creating AppDir structure..."
+          mkdir -p ccloud.AppDir/usr/bin
+          cp -r build/linux/x64/release/bundle/* ccloud.AppDir/usr/bin/
+          
+          # Create desktop file directly in AppDir
+          echo "Creating desktop file..."
+          cat > ccloud.AppDir/ccloud.desktop << EOF
+          [Desktop Entry]
+          Name=CCloud
+          Exec=ccloud
+          Icon=ccloud
+          Type=Application
+          Categories=Utility;
+          EOF
+          
+          # Make sure the executable is properly linked
+          chmod +x ccloud.AppDir/usr/bin/ccloud
+          
+          # List files for debugging
+          echo "AppDir contents:"
+          find ccloud.AppDir -type f
+          
+          # Create AppImage
+          echo "Creating AppImage..."
+          OUTPUT=release/CCloud-$VERSION-linux.AppImage ./linuxdeploy-x86_64.AppImage \
+            --appdir ccloud.AppDir \
+            --output appimage || {
+            echo "AppImage creation failed, continuing with other packages"
+            echo "Contents of release directory:"
+            ls -la release/ || echo "Release directory not found or empty"
+          }
+        shell: bash
+
+      - name: Package Linux build
+        run: |
+          mkdir -p release
+          # Create tar.gz archive of the Linux build
+          tar -czf release/CCloud-linux.tar.gz -C build/linux/x64/release bundle/
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: |
+            release/CCloud-linux.tar.gz
+            release/CCloud-*-linux.AppImage
+            release/ccloud.deb
+            release/ccloud.rpm
+
+  release:
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Windows artifacts (x64)
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-build-x64
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-build
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-build
+
+      - name: Get tag name
+        id: get_tag
+        run: |
+          if [[ $GITHUB_EVENT_NAME == 'workflow_dispatch' ]]; then
+            echo "TAG_NAME=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          else
+            echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          fi
+          # Extract version from pubspec.yaml
+          VERSION=$(grep '^version:' pubspec.yaml | cut -d ':' -f 2 | tr -d ' ')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: Release ${{ env.TAG_NAME }}
+          draft: false
+          prerelease: false
+          files: |
+            CCloud-setup.exe
+            CCloud-windows-x64-installer.zip
+            CCloud-windows-x64-portable.zip
+            CCloud-macos-universal.dmg
+            CCloud-macos-universal.zip
+            CCloud-linux.tar.gz
+            CCloud-*-linux.AppImage
+            ccloud.deb
+            ccloud.rpm
+          body: |
+            ## CCloud Release ${{ env.TAG_NAME }}
+            
+            ### Download
+            
+            | Platform | Architecture | Download |
+            |----------|-------------|----------|
+            | Windows  | x64 (Installer) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-setup.exe"><img src="https://img.shields.io/badge/Windows-Installer-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Installer"></a> |
+            | Windows  | x64 (ZIP - Installer) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-windows-x64-installer.zip"><img src="https://img.shields.io/badge/Windows-x64--ZIP--Installer-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x64 ZIP Installer"></a> |
+            | Windows  | x64 (Portable ZIP) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-windows-x64-portable.zip"><img src="https://img.shields.io/badge/Windows-x64--Portable--ZIP-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x64 Portable ZIP"></a> |
+            | macOS    | Universal (.dmg) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-macos-universal.dmg"><img src="https://img.shields.io/badge/macOS-Universal-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Universal DMG"></a> |
+            | macOS    | Universal (.zip) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-macos-universal.zip"><img src="https://img.shields.io/badge/macOS-Universal-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Universal ZIP"></a> |
+            | Linux    | x64 (tar.gz) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-linux.tar.gz"><img src="https://img.shields.io/badge/Linux-tar.gz-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux tar.gz"></a> |
+            | Linux    | x64 (AppImage) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-${{ env.VERSION }}-linux.AppImage"><img src="https://img.shields.io/badge/Linux-AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux AppImage"></a> |
+            | Linux    | x64 (.deb) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/ccloud.deb"><img src="https://img.shields.io/badge/Linux-.deb-FCC624?style=for-the-badge&logo=debian&logoColor=white" alt="Linux .deb"></a> |
+            | Linux    | x64 (.rpm) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/ccloud.rpm"><img src="https://img.shields.io/badge/Linux-.rpm-FCC624?style=for-the-badge&logo=redhat&logoColor=white" alt="Linux .rpm"></a> |
