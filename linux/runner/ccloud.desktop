@@ -2,7 +2,7 @@
 Name=CCloud
 Comment=Modern, free, and unlimited Iranian Persian streaming application
 Exec=ccloud_gui
-Icon=ccloud
+Icon=ccloud_gui
 Terminal=false
 Type=Application
 Categories=Utility;
