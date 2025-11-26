@@ -5,6 +5,7 @@ import '../screens/series_screen.dart';
 import '../screens/search_screen.dart';
 import '../screens/favorites_screen.dart';
 import '../screens/settings_screen.dart';
+import '../screens/countries_screen.dart';
 import '../widgets/app_shell.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -38,6 +39,12 @@ final GoRouter appRouter = GoRouter(
       path: '/settings',
       builder: (BuildContext context, GoRouterState state) {
         return AppShell(child: const SettingsScreen());
+      },
+    ),
+    GoRoute(
+      path: '/countries',
+      builder: (BuildContext context, GoRouterState state) {
+        return AppShell(child: const CountriesScreen());
       },
     ),
   ],

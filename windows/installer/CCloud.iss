@@ -1,5 +1,5 @@
 #define MyAppName "CCloud"
-#define MyAppVersion "1.0.2"
+#define MyAppVersion "1.0.3"
 #define MyAppPublisher "Hossein Pira"
 #define MyAppURL "https://github.com/code3-dev/CCloud-GUI"
 #define MyAppExeName "ccloud_gui.exe"

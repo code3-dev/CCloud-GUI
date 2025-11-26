@@ -7,6 +7,7 @@ import 'src/providers/genre_provider.dart';
 import 'src/providers/series_provider.dart';
 import 'src/providers/seasons_provider.dart';
 import 'src/providers/search_provider.dart';
+import 'src/providers/countries_provider.dart';
 
 void main() {
   runApp(
@@ -18,6 +19,8 @@ void main() {
         ChangeNotifierProvider(create: (_) => SeriesProvider()),
         ChangeNotifierProvider(create: (_) => SeasonsProvider()),
         ChangeNotifierProvider(create: (_) => SearchProvider()),
+        ChangeNotifierProvider(create: (_) => CountriesProvider()),
+        ChangeNotifierProvider(create: (_) => CountryMediaProvider()),
       ],
       child: const CCloud(),
     ),

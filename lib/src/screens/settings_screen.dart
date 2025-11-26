@@ -374,7 +374,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           ),
                                         ),
                                         child: Text(
-                                          'نسخه 1.0.2',
+                                          'نسخه 1.0.3',
                                           style: GoogleFonts.vazirmatn(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
@@ -569,7 +569,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  'نسخه 1.0.2',
+                  'نسخه 1.0.3',
                   style: GoogleFonts.vazirmatn(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -742,7 +742,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           context,
                           icon: Icons.code,
                           label: 'گیت‌هاب',
-                          url: 'https://github.com/code3-dev',
+                          url: 'https://github.com/code3-dev/CCloud-GUI',
                         ),
                         _buildSupportButton(
                           context,
@@ -783,7 +783,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           final releaseUrl = latestRelease['html_url'] as String;
 
           // Current app version
-          const currentVersion = 'v1.0.2';
+          const currentVersion = 'v1.0.3';
 
           // Compare versions
           if (_isVersionNewer(latestVersion, currentVersion)) {
@@ -931,7 +931,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  'نسخه فعلی: v1.0.2',
+                  'نسخه فعلی: v1.0.3',
                   style: GoogleFonts.vazirmatn(
                     fontSize: 16,
                     color: Theme.of(context).textTheme.bodyMedium?.color,
