@@ -16,7 +16,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        architecture: [x64, arm64]
+        architecture: [x64]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Windows (${{ matrix.architecture }})
-        run: flutter build windows --release --target-platform windows-${{ matrix.architecture }}
+        run: flutter build windows --release
 
       - name: Install Inno Setup
         run: |
@@ -40,13 +40,13 @@ jobs:
       - name: Create Windows installer
         run: |
           cd windows\installer
-          ISCC.exe /DMyAppArchitecture=${{ matrix.architecture }} CCloud.iss
+          ISCC.exe CCloud.iss
         shell: cmd
 
       - name: Package Windows build
         run: |
           mkdir -p release
-          copy windows\installer\ccloud_gui-setup-${{ matrix.architecture }}.exe release\
+          copy windows\installer\ccloud_gui-setup.exe release\
         shell: cmd
 
       - name: Create Windows Portable ZIP
@@ -62,7 +62,7 @@ jobs:
         with:
           name: windows-build-${{ matrix.architecture }}
           path: |
-            release/ccloud_gui-setup-${{ matrix.architecture }}.exe
+            release/ccloud_gui-setup.exe
             release/CCloud-windows-${{ matrix.architecture }}-portable.zip
 
   build-macos:
@@ -299,11 +299,6 @@ jobs:
         with:
           name: windows-build-x64
 
-      - name: Download Windows artifacts (ARM64)
-        uses: actions/download-artifact@v4
-        with:
-          name: windows-build-arm64
-
       - name: Download macOS artifacts
         uses: actions/download-artifact@v4
         with:
@@ -336,10 +331,8 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            ccloud_gui-setup-x64.exe
-            ccloud_gui-setup-arm64.exe
+            ccloud_gui-setup.exe
             CCloud-windows-x64-portable.zip
-            CCloud-windows-arm64-portable.zip
             CCloud-macos-universal.dmg
             CCloud-macos-universal.zip
             CCloud-linux.tar.gz
@@ -359,10 +352,8 @@ jobs:
             
             | Platform | Architecture | Download |
             |----------|-------------|----------|
-            | Windows  | x64 (Installer) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/ccloud_gui-setup-x64.exe"><img src="https://img.shields.io/badge/Windows-x64--Installer-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x64 Installer"></a> |
+            | Windows  | x64 (Installer) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/ccloud_gui-setup.exe"><img src="https://img.shields.io/badge/Windows-Installer-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Installer"></a> |
             | Windows  | x64 (Portable ZIP) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-windows-x64-portable.zip"><img src="https://img.shields.io/badge/Windows-x64--Portable--ZIP-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x64 Portable ZIP"></a> |
-            | Windows  | ARM64 (Installer) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/ccloud_gui-setup-arm64.exe"><img src="https://img.shields.io/badge/Windows-ARM64--Installer-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows ARM64 Installer"></a> |
-            | Windows  | ARM64 (Portable ZIP) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-windows-arm64-portable.zip"><img src="https://img.shields.io/badge/Windows-ARM64--Portable--ZIP-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows ARM64 Portable ZIP"></a> |
             | macOS    | Universal (.dmg) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-macos-universal.dmg"><img src="https://img.shields.io/badge/macOS-Universal-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Universal DMG"></a> |
             | macOS    | Universal (.zip) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-macos-universal.zip"><img src="https://img.shields.io/badge/macOS-Universal-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Universal ZIP"></a> |
             | Linux    | x64 (tar.gz) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-linux.tar.gz"><img src="https://img.shields.io/badge/Linux-tar.gz-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux tar.gz"></a> |

@@ -3,7 +3,6 @@
 #define MyAppPublisher "Hossein Pira"
 #define MyAppURL "https://github.com/code3-dev/CCloud-GUI"
 #define MyAppExeName "ccloud_gui.exe"
-#define MyAppArchitecture "x64"
 
 [Setup]
 AppId={{8B4D4F4D-4F4D-4D4F-4D4F-4D4D4D4D4D4E}
@@ -16,7 +15,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 DisableProgramGroupPage=yes
 OutputDir=.
-OutputBaseFilename=ccloud_gui-setup-{#MyAppArchitecture}
+OutputBaseFilename=ccloud_gui-setup
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -30,8 +29,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons"; Flags: unchecked
 
 [Files]
-Source: "..\..\build\windows\{#MyAppArchitecture}\runner\Release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\build\windows\{#MyAppArchitecture}\runner\Release\*"; Excludes: "{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\..\build\windows\x64\runner\Release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\build\windows\x64\runner\Release\*"; Excludes: "{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
