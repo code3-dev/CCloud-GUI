@@ -36,15 +36,15 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/settings',
-      builder: (BuildContext context, GoRouterState state) {
-        return AppShell(child: const SettingsScreen());
-      },
-    ),
-    GoRoute(
       path: '/countries',
       builder: (BuildContext context, GoRouterState state) {
         return AppShell(child: const CountriesScreen());
+      },
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (BuildContext context, GoRouterState state) {
+        return AppShell(child: const SettingsScreen());
       },
     ),
   ],

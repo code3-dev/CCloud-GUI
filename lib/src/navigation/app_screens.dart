@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum AppScreen { movies, series, search, favorites, countries, settings }
+enum AppScreen { movies, series, search, countries, favorites, settings }
 
 extension AppScreenExtension on AppScreen {
   String get route {
@@ -30,10 +30,10 @@ extension AppScreenExtension on AppScreen {
         return 'جستجو';
       case AppScreen.favorites:
         return 'علاقه‌مندی‌ها';
-      case AppScreen.settings:
-        return 'تنظیمات';
       case AppScreen.countries:
         return 'کشورها';
+      case AppScreen.settings:
+        return 'تنظیمات';
     }
   }
 
@@ -47,10 +47,10 @@ extension AppScreenExtension on AppScreen {
         return Icons.search;
       case AppScreen.favorites:
         return Icons.favorite;
-      case AppScreen.settings:
-        return Icons.settings;
       case AppScreen.countries:
         return Icons.flag;
+      case AppScreen.settings:
+        return Icons.settings;
     }
   }
 
