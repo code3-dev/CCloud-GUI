@@ -1,0 +1,14 @@
+{
+  "id": "com.pira.ccloud",
+  "version": "1.0.4",
+  "vendor": "Hossein Pira",
+  "type": "web",
+  "main": "index.html",
+  "title": "CCloud",
+  "icon": "img/icon.png",
+  "largeIcon": "img/largeIcon.png",
+  "bgColor": "#0e1116",
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true,
+  "requiredPermissions": []
+}

@@ -66,7 +66,7 @@ CCloud features a sleek, contemporary user interface designed for optimal user e
 - **Unlimited Content**: Enjoy unlimited streaming of Iranian Persian movies and series
 
 ### 🖥️ Platform Support
-- **Cross-Platform**: Available for Windows, macOS, and Linux
+- **Cross-Platform**: Available for Windows, macOS, Linux, and LG webOS TVs
 - **Modern Interface**: Clean, intuitive, and user-friendly design
 
 ### ⚡ Performance
@@ -89,6 +89,10 @@ If you encounter any errors when installing or running CCloud on Windows, please
 ### 🐧 Linux Installation
 
 For detailed instructions on installing and running CCloud on Linux, please refer to our [Linux Installation Guide](assets/LINUX_INSTALL.md).
+
+### 📺 LG webOS TV Installation
+
+CCloud is also available for LG smart TVs as `CCloud-webos.ipk`. It's a remote-friendly TV app built with web technologies, in the [`webos/`](webos/) folder. See the [webOS TV Installation Guide](assets/WEBOS_INSTALL.md) to install it in Developer Mode.
 
 ## 💻 Development
 

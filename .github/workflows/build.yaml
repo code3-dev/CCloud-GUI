@@ -301,8 +301,38 @@ jobs:
             release/CCloud-*-linux.AppImage
             release/ccloud.deb
             release/ccloud.rpm
+  build-webos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install webOS CLI
+        run: npm install -g @webos-tools/cli
+
+      - name: Build webOS package
+        run: |
+          # webOS versions are x.y.z, so drop the build number from pubspec.yaml
+          VERSION=$(grep '^version:' pubspec.yaml | cut -d ':' -f 2 | tr -d ' ' | cut -d '+' -f 1)
+          node -e "const f='webos/app/appinfo.json',a=require('./'+f);a.version='$VERSION';require('fs').writeFileSync(f,JSON.stringify(a,null,2)+'\n')"
+          mkdir -p webos/dist release
+          ares-package webos/app -o webos/dist --no-minify
+          cp webos/dist/com.pira.ccloud_${VERSION}_all.ipk release/CCloud-webos.ipk
+        shell: bash
+
+      - name: Upload webOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: webos-build
+          path: release/CCloud-webos.ipk
+
   release:
-    needs: [build-windows, build-macos, build-linux]
+    needs: [build-windows, build-macos, build-linux, build-webos]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -322,6 +352,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: linux-build
+
+      - name: Download webOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: webos-build
 
       - name: Get tag name
         id: get_tag
@@ -353,6 +388,7 @@ jobs:
             CCloud-*-linux.AppImage
             ccloud.deb
             ccloud.rpm
+            CCloud-webos.ipk
           body: |            
             ## CCloud Release ${{ env.TAG_NAME }}
             
@@ -374,6 +410,9 @@ jobs:
             | Linux    | x64 (AppImage) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-${{ env.VERSION }}-linux.AppImage"><img src="https://img.shields.io/badge/Linux-AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux AppImage"></a> |
             | Linux    | x64 (.deb) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/ccloud.deb"><img src="https://img.shields.io/badge/Linux-.deb-FCC624?style=for-the-badge&logo=debian&logoColor=white" alt="Linux .deb"></a> |
             | Linux    | x64 (.rpm) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/ccloud.rpm"><img src="https://img.shields.io/badge/Linux-.rpm-FCC624?style=for-the-badge&logo=redhat&logoColor=white" alt="Linux .rpm"></a> |
+            | LG webOS TV | webOS 4.0+ (.ipk) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-webos.ipk"><img src="https://img.shields.io/badge/LG_webOS-.ipk-A50034?style=for-the-badge&logo=lg&logoColor=white" alt="LG webOS TV .ipk"></a> |
             | Android  | Universal APK | <a href="https://github.com/code3-dev/CCloud/releases/latest/download/CCloud-universal.apk"><img src="https://img.shields.io/badge/Android-APK-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android Universal APK"></a> |
             
             For detailed instructions on installing and running CCloud on Linux, please refer to our [Linux Installation Guide](https://github.com/code3-dev/CCloud-GUI/blob/main/assets/LINUX_INSTALL.md).
+
+            To install CCloud on an LG TV, see the [webOS TV Installation Guide](https://github.com/code3-dev/CCloud-GUI/blob/main/assets/WEBOS_INSTALL.md).

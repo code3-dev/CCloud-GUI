@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <!-- Only this app's own scripts run. The API and posters come from the
+       CCloud servers; video files come from many different hosts. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: http: data:; media-src https: http: blob:; connect-src https://server-hi-speed-iran.info https://hostinnegar.com https://windowsdiba.info; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>CCloud</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <nav id="menu" class="menu" data-trap="up,down">
+    <div class="brand"><img src="img/logo.png" alt=""><span>CCloud</span></div>
+    <button class="menu-item focusable" data-route="home">خانه</button>
+    <button class="menu-item focusable" data-route="movies">فیلم‌ها</button>
+    <button class="menu-item focusable" data-route="series">سریال‌ها</button>
+    <button class="menu-item focusable" data-route="search">جستجو</button>
+    <button class="menu-item focusable" data-route="favorites">علاقه‌مندی‌ها</button>
+    <button class="menu-item focusable" data-route="countries">کشورها</button>
+    <button class="menu-item focusable" data-route="settings">تنظیمات</button>
+  </nav>
+  <main id="view"></main>
+
+  <div id="player" class="player hidden">
+    <video id="video" playsinline></video>
+    <div id="overlay" class="overlay hidden">
+      <div class="ov-top">
+        <div class="ov-title" id="ovTitle"></div>
+        <div class="ov-sub" id="ovSub"></div>
+      </div>
+      <div class="ov-msg hidden" id="ovMsg"></div>
+      <div class="ov-bottom">
+        <div class="progress focusable" id="progress" dir="ltr"><div class="bar"><div class="fill" id="progFill"></div><div class="buf" id="progBuf"></div></div></div>
+        <div class="times" dir="ltr"><span id="tCur">0:00</span><span id="tDur">0:00</span></div>
+        <div class="controls" id="controls">
+          <button class="ctl focusable" data-act="play" id="btnPlay">توقف</button>
+          <button class="ctl focusable" data-act="back10">۱۰ ثانیه عقب</button>
+          <button class="ctl focusable" data-act="fwd30">۳۰ ثانیه جلو</button>
+          <button class="ctl focusable" data-act="quality" id="btnQuality">کیفیت</button>
+          <button class="ctl focusable hidden" data-act="audio" id="btnAudio">صدا</button>
+          <button class="ctl focusable hidden" data-act="subs" id="btnSubs">زیرنویس</button>
+          <button class="ctl focusable hidden" data-act="next" id="btnNext">قسمت بعد</button>
+        </div>
+      </div>
+    </div>
+    <div id="spinner" class="spinner hidden"></div>
+  </div>
+
+  <div id="modal" class="modal hidden"><div class="modal-box" id="modalBox"></div></div>
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="js/nav.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
